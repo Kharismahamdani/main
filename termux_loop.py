@@ -42,7 +42,7 @@ def get_code_patterns(valid_codes):
 # Fungsi untuk menghasilkan kode acak sesuai pola dataset
 def generate_code_from_pattern(prefix_list, suffix_list):
     characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-    return f"{random.choice(prefix_list[:5])}{''.join(random.choices(characters, k=4))}{random.choice(suffix_list[:5])}"
+    return f"{random.choice(prefix_list[:5])}{''.join(random.choices(characters, k=4))}{random.choice(suffix_list[:10])}"
 
 # Validasi kode asinkron
 async def validate_code(session, code):
@@ -53,7 +53,7 @@ async def validate_code(session, code):
     payload = {"uniq_code": code}
 
     try:
-        async with session.post('https://dashboard.yamalubepromo.com/api/v1/wziioquyqthkal', json=payload, headers=headers, timeout=10) as response:
+        async with session.post('https://dashboard.yamalubepromo.com/api/v1/wziioquyqthkal', json=payload, headers=headers, timeout=36) as response:
             response_data = await response.text()
             return code, response.status, response_data
     except Exception as e:
@@ -66,13 +66,13 @@ async def perform_validation(count, prefix_list, suffix_list):
         tasks = [validate_code(session, generate_code_from_pattern(prefix_list, suffix_list)) for _ in range(count)]
         return await asyncio.gather(*tasks)
 
-# Fungsi untuk rekapitulasi hasil
+# Fungsi untuk rekapitulasi hasil dengan warna
 async def rekapitulasi(valid_codes, invalid_codes, error_codes, duration):
     summary = (
         f"\n{BRIGHT}Summary:{RESET}\n"
         f"{GREEN}Total kode valid: {len(valid_codes)}{RESET}\n"
-        f"{RED}Total kode invalid: {len(invalid_codes)}{RESET}\n"
-        f"{YELLOW}Total kode error: {len(error_codes)}{RESET}\n"
+        f"{YELLOW}Total kode invalid: {len(invalid_codes)}{RESET}\n"
+        f"{RED}Total kode error: {len(error_codes)}{RESET}\n"
         f"{BRIGHT}Jumlah validasi kode: {len(valid_codes) + len(invalid_codes) + len(error_codes)}{RESET}\n"
         f"Waktu validasi: {duration:.2f} detik\n\n"
     )
@@ -82,7 +82,7 @@ async def rekapitulasi(valid_codes, invalid_codes, error_codes, duration):
 async def main():
     valid_codes = await read_valid_dataset()
     prefix_list, suffix_list = get_code_patterns(valid_codes)
-    count = 200  # Jumlah kode yang ingin divalidasi dalam setiap batch
+    count = 100  # Jumlah kode yang ingin divalidasi dalam setiap batch
 
     while True:  # Looping tak terbatas
         start_time = time.time()
@@ -97,8 +97,10 @@ async def main():
                 print(f"{GREEN}Kode valid: {code}{RESET}")
             elif status == 400:
                 invalid.add(code)
+                print(f"{YELLOW}Kode invalid: {code}{RESET}")
             else:
                 error.add(code)
+                print(f"{RED}Kode error: {code}{RESET}")
         
         end_time = time.time()
         duration = end_time - start_time
