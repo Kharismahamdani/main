@@ -5,6 +5,7 @@ import random
 import time
 from collections import Counter
 import logging
+import os
 
 # Konfigurasi warna ANSI
 GREEN = "\033[92m"
@@ -13,7 +14,7 @@ YELLOW = "\033[93m"
 BRIGHT = "\033[1m"
 RESET = "\033[0m"
 
-# Konfigurasi logging ke file untuk keperluan debugging
+# Konfigurasi logging ke file untuk debugging
 logging.basicConfig(filename='validation.log', format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -27,8 +28,11 @@ USER_AGENTS = [
 
 # Fungsi pembaca dataset kode yang valid
 async def read_valid_dataset(file_path='valid_codes.txt'):
+    # Menggunakan path absolut berdasarkan lokasi skrip
+    file_path = os.path.join(os.path.dirname(__file__), file_path)
     async with aiofiles.open(file_path, 'r') as f:
-        return [line.strip() for line in await f.readlines()]
+        valid_codes = [line.strip() for line in await f.readlines()]
+    return valid_codes
 
 # Fungsi untuk mendapatkan pola kode dari dataset
 def get_code_patterns(valid_codes):
@@ -65,6 +69,7 @@ async def perform_validation(count, prefix_list, suffix_list):
 
 # Fungsi utama untuk validasi batch
 async def main():
+    # Baca dataset dari file valid_codes.txt
     valid_codes = await read_valid_dataset()
     prefix_list, suffix_list = get_code_patterns(valid_codes)
     count = 200  # Jumlah kode yang ingin divalidasi secara bersamaan
