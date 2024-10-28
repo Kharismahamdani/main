@@ -36,13 +36,13 @@ async def read_valid_dataset(file_path='valid_codes.txt'):
 # Fungsi untuk mendapatkan pola kode dari dataset
 def get_code_patterns(valid_codes):
     prefixes = [code[:2] for code in valid_codes]
-    suffixes = [code[-2:] for code in valid_codes]
+    suffixes = [code[-3:] for code in valid_codes]
     return [prefix for prefix, _ in Counter(prefixes).most_common()], [suffix for suffix, _ in Counter(suffixes).most_common()]
 
 # Fungsi untuk menghasilkan kode acak sesuai pola dataset
 def generate_code_from_pattern(prefix_list, suffix_list):
     characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-    return f"{random.choice(prefix_list[:5])}{''.join(random.choices(characters, k=4))}{random.choice(suffix_list[:30])}"
+    return f"{random.choice(prefix_list[:5])}{''.join(random.choices(characters, k=4))}{random.choice(suffix_list[:10])}"
 
 # Validasi kode asinkron
 async def validate_code(session, code):
