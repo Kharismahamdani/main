@@ -69,8 +69,8 @@ async def perform_validation(count, prefix_list, suffix_list):
 # Fungsi untuk rekapitulasi hasil dengan warna
 async def rekapitulasi(valid_codes, invalid_codes, error_codes, duration):
     summary = (
-        f"\n{BRIGHT}Summary:{RESET}\n"
-        f"{GREEN}Total kode valid: {len(valid_codes)}{RESET}\n"
+        f"\n{BRIGHT}REKAPITULASI:{RESET}\n"
+        f"{GREEN}Total KODE VALID: {len(valid_codes)}{RESET}\n"
         f"{YELLOW}Total kode invalid: {len(invalid_codes)}{RESET}\n"
         f"{RED}Total kode error: {len(error_codes)}{RESET}\n"
         f"{BRIGHT}Jumlah validasi kode: {len(valid_codes) + len(invalid_codes) + len(error_codes)}{RESET}\n"
