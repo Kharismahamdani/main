@@ -42,7 +42,7 @@ def get_code_patterns(valid_codes):
 # Fungsi untuk menghasilkan kode acak sesuai pola dataset
 def generate_code_from_pattern(prefix_list, suffix_list):
     characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-    return f"{random.choice(prefix_list[:5])}{''.join(random.choices(characters, k=4))}{random.choice(suffix_list[:10])}"
+    return f"{random.choice(prefix_list[:5])}{''.join(random.choices(characters, k=4))}{random.choice(suffix_list[:20])}"
 
 # Validasi kode asinkron
 async def validate_code(session, code):
