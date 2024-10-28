@@ -27,9 +27,9 @@ USER_AGENTS = [
 ]
 
 # Fungsi pembaca dataset kode yang valid
-async def read_valid_dataset(file_path='valid_codes.txt'):
-    # Menggunakan path absolut berdasarkan lokasi skrip
-    file_path = os.path.join(os.path.dirname(__file__), file_path)
+async def read_valid_dataset():
+    file_path = '/data/data/com.termux/files/home/termux.py/valid_codes.txt'  # Path absolut
+    print(f"Membaca file dari path: {file_path}")  # Debug untuk memastikan path
     async with aiofiles.open(file_path, 'r') as f:
         valid_codes = [line.strip() for line in await f.readlines()]
     return valid_codes
