@@ -73,10 +73,10 @@ def get_code_patterns(valid_codes):
 # Fungsi untuk menghasilkan kode acak sesuai pola dataset
 def generate_code_from_pattern(prefix_list, suffix_list):
     characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-    return f"{random.choice(prefix_list[:5])}{''.join(random.choices(characters, k=4))}{random.choice(suffix_list[:10])}"
+    return f"{random.choice(prefix_list[:5])}{''.join(random.choices(characters, k=4))}{random.choice(suffix_list[:5])}"
 
 # Limit jumlah koneksi secara bersamaan
-sem = asyncio.Semaphore(250)  # Batasi jumlah koneksi untuk menghindari beban berlebih
+sem = asyncio.Semaphore(1000)  # Batasi jumlah koneksi untuk menghindari beban berlebih
 
 # Fungsi untuk mendapatkan proxy dengan autentikasi
 def get_proxy_auth(proxy_config):
@@ -103,7 +103,7 @@ async def validate_code(session, code, max_retries=3):
                 async with session.post(
                     'https://dashboard.yamalubepromo.com/api/v1/wziioquyqthkal',
                     json=payload, headers=headers, proxy=proxy_url,
-                    proxy_auth=proxy_auth, timeout=10
+                    proxy_auth=proxy_auth, timeout=5
                 ) as response:
                     response_data = await response.text()
                     if response.status == 200:
@@ -143,7 +143,7 @@ async def rekapitulasi(valid_codes, invalid_codes, error_codes, duration):
 async def main():
     valid_codes = await read_valid_dataset()
     prefix_list, suffix_list = get_code_patterns(valid_codes)
-    count = 200  # Jumlah kode yang ingin divalidasi dalam setiap batch
+    count = 100  # Jumlah kode yang ingin divalidasi dalam setiap batch
 
     while True:  # Looping tak terbatas
         start_time = time.time()
