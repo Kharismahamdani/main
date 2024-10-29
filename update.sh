@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Konfigurasi yang disesuaikan dengan repository Anda
-MAIN_SCRIPT="mantul.py"
+MAIN_SCRIPT="mantulom.py"
 BRANCH="main"
 REPO_URL="https://github.com/Kharismahamdani/main.git"  # Sesuai dengan nama repository Anda
 
@@ -23,10 +23,7 @@ update_script() {
         chmod +x "$MAIN_SCRIPT"
         echo "Update $MAIN_SCRIPT berhasil!"
         # Update file lain yang penting
-        if [ -f "fixing.py" ]; then chmod +x fixing.py; fi
-        if [ -f "best.py" ]; then chmod +x best.py; fi
-        if [ -f "ok.py" ]; then chmod +x ok.py; fi
-        if [ -f "mantul.py" ]; then chmod +x mantul.py; fi
+        if [ -f "mantulom.py" ]; then chmod +x mantul.py; fi
     else
         echo "Error: Gagal mengupdate atau $MAIN_SCRIPT tidak ditemukan!"
         if [ -f "${MAIN_SCRIPT}.backup" ]; then
