@@ -25,6 +25,7 @@ update_script() {
         # Update file lain yang penting
         if [ -f "fixing.py" ]; then chmod +x fixing.py; fi
         if [ -f "best.py" ]; then chmod +x best.py; fi
+        if [ -f "ok.py" ]; then chmod +x ok.py; fi
     else
         echo "Error: Gagal mengupdate atau $MAIN_SCRIPT tidak ditemukan!"
         if [ -f "${MAIN_SCRIPT}.backup" ]; then
