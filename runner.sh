@@ -3,7 +3,7 @@
 # Konfigurasi
 REPO_URL="https://github.com/Kharismahamdani/termux.py.git"
 BRANCH="main"
-SCRIPT_NAME="mantul_multi.py"
+SCRIPT_NAME="josgandos.py"
 UPDATE_INTERVAL=300  # Cek update setiap 5 menit
 
 # Fungsi untuk setup awal
