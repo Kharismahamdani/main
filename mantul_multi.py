@@ -162,7 +162,7 @@ class CodeValidator:
             return code, 0, "Skipped - not in device range"
 
         if code in self.validated_codes:
-            return code, 400, "Already validated"
+            return code, 400, "invalid"
         
         self.validated_codes.add(code)
 
