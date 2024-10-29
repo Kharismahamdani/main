@@ -3,7 +3,7 @@
 # Konfigurasi yang disesuaikan dengan repository Anda
 MAIN_SCRIPT="ok.py"
 BRANCH="main"
-REPO_URL="https://github.com/Kharismahamdani/termux.py.git"  # Sesuai dengan nama repository Anda
+REPO_URL="https://github.com/Kharismahamdani/main.git"  # Sesuai dengan nama repository Anda
 
 # Fungsi untuk update script
 update_script() {
