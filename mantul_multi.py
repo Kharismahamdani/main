@@ -1,7 +1,6 @@
 import asyncio
 import aiohttp
 import aiofiles
-import requests
 import random
 import time
 from collections import Counter
@@ -9,16 +8,12 @@ import logging
 import os
 from datetime import datetime
 import json
-import socket
 import hashlib
-import fcntl
-import struct
 
 # Konfigurasi warna ANSI
 GREEN = "\033[92m"
 RED = "\033[91m"
 YELLOW = "\033[93m"
-BRIGHT = "\033[1m"
 RESET = "\033[0m"
 
 # Konfigurasi logging
@@ -151,8 +146,14 @@ class CodeValidator:
         self.start_time = time.time()
         self.validated_codes = set()
 
+    def generate_code(self):
+        """Generate a random code for validation"""
+        return f"CODE-{random.randint(1000, 9999)}"
+
     def should_process_code(self, code):
         """Determine if this device should process the code"""
+        if self.total_devices == 0:
+            return False
         code_hash = int(hashlib.md5(code.encode()).hexdigest(), 16)
         return (code_hash % self.total_devices) + 1 == self.device_id
 
@@ -220,8 +221,6 @@ class CodeValidator:
             
         except Exception as e:
             logger.error(f"Error saving valid code: {e}")
-
-    # [Rest of the CodeValidator methods remain the same...]
 
 async def main():
     # Initialize device coordination
