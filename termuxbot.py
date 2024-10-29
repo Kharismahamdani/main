@@ -57,7 +57,6 @@ class CodeValidator:
         self.start_time = time.time()
         self.validated_codes = set()
         self.prefixes = ["MF", "BY", "CW", "9L", "J8"]  # Prefix yang ditentukan
-        self.suffixes = ["LH", "8D", "8M", "YX", "TK", "4Y", "9Y", "9X", "VY"]  # Suffix yang ditentukan
         self.total_valid = 0
         self.total_invalid = 0
         self.total_error = 0
@@ -67,8 +66,8 @@ class CodeValidator:
         """Generate kode dengan 2 prefiks awal yang ditentukan dan 6 karakter acak alfanumerik"""
         prefix = random.choice(self.prefixes)
         suffix = random.choice(self.prefixes)
-        random_part = ''.join(random.choices("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=4))
-        return f"{prefix}{random_part}[{suffix}]"
+        random_part = ''.join(random.choices("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=6))
+        return f"{prefix}{random_part}"
 
     async def validate_code(self, session, code):
         if code in self.validated_codes:
