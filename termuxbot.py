@@ -4,6 +4,7 @@ import aiofiles
 import random
 import time
 import logging
+import hashlib
 from datetime import datetime
 
 # Konfigurasi warna ANSI untuk output di Termux
@@ -49,7 +50,7 @@ class CodeValidator:
     def __init__(self, device_id, total_devices):
         self.device_id = device_id
         self.total_devices = total_devices
-        self.sem = asyncio.Semaphore(200)
+        self.sem = asyncio.Semaphore(150)
         self.batch_size = 100
         self.retry_delay = 0.1
         self.valid_codes = set()
@@ -59,6 +60,7 @@ class CodeValidator:
         self.total_invalid = 0
         self.total_error = 0
         self.total_processed = 0
+        self.valid_code_batch = []  # Menyimpan kode valid untuk rekapitulasi per batch
 
     def generate_code(self):
         """Generate kode dengan format [prefix][4 random alphanumeric][suffix]"""
@@ -127,16 +129,46 @@ class CodeValidator:
             return code, 500, "Failed after retries"
 
     async def record_valid_code(self, code):
-        """Simpan kode valid dan kirim notifikasi ke Telegram"""
+        """Simpan kode valid, kirim notifikasi real-time, dan periksa untuk rekapitulasi batch"""
         async with aiofiles.open('valid_codes.txt', 'a') as f:
             await f.write(f"{code}\n")
         
+        # Kirim notifikasi real-time ke Telegram
         for chat_id in CHAT_IDS:
             message = f"{code}"
             url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
             payload = {'chat_id': chat_id, 'text': message}
             async with aiohttp.ClientSession() as session:
                 await session.post(url, data=payload)
+
+        # Tambahkan kode ke batch untuk rekapitulasi
+        self.valid_code_batch.append(code)
+        
+        # Jika sudah mencapai 100 kode, kirim rekapitulasi ke Telegram
+        if len(self.valid_code_batch) >= 100:
+            await self.send_batch_recap()
+
+    async def send_batch_recap(self):
+        """Kirim rekapitulasi batch dari 100 kode valid"""
+        mac_address = self.get_mac_address()
+        recap_message = f"Rekapitulasi Kode Valid - Device {mac_address}\n" + "\n".join(self.valid_code_batch)
+
+        for chat_id in CHAT_IDS:
+            url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+            payload = {'chat_id': chat_id, 'text': recap_message}
+            async with aiohttp.ClientSession() as session:
+                await session.post(url, data=payload)
+        
+        # Reset batch setelah pengiriman
+        self.valid_code_batch = []
+
+    def get_mac_address(self):
+        """Dapatkan alamat MAC perangkat untuk identifikasi unik"""
+        try:
+            with open('/sys/class/net/wlan0/address', 'r') as f:
+                return f.read().strip()
+        except:
+            return "Unknown MAC"
 
     def display_status(self, elapsed_time):
         print(
