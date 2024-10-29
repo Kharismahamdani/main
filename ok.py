@@ -86,7 +86,7 @@ def get_proxy_auth(proxy_config):
     )
 
 # Validasi kode asinkron dengan retry, rotasi proxy, dan exponential backoff
-async def validate_code(session, code, max_retries=3):
+async def validate_code(session, code, max_retries=2):
     async with sem:
         headers = {
             'User-Agent': random.choice(USER_AGENTS),
@@ -103,7 +103,7 @@ async def validate_code(session, code, max_retries=3):
                 async with session.post(
                     'https://dashboard.yamalubepromo.com/api/v1/wziioquyqthkal',
                     json=payload, headers=headers, proxy=proxy_url,
-                    proxy_auth=proxy_auth, timeout=10
+                    proxy_auth=proxy_auth, timeout=5
                 ) as response:
                     response_data = await response.text()
                     if response.status == 200:
@@ -143,7 +143,7 @@ async def rekapitulasi(valid_codes, invalid_codes, error_codes, duration):
 async def main():
     valid_codes = await read_valid_dataset()
     prefix_list, suffix_list = get_code_patterns(valid_codes)
-    count = 100  # Jumlah kode yang ingin divalidasi dalam setiap batch
+    count = 1000  # Jumlah kode yang ingin divalidasi dalam setiap batch
 
     while True:  # Looping tak terbatas
         start_time = time.time()
