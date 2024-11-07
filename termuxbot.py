@@ -40,10 +40,10 @@ USER_AGENTS = [
 # Konfigurasi proxy
 PROXIES = [
     {
-        'proxy_host': 'gw.dataimpulse.com',
+        'proxy_host': '144.76.124.83',
         'proxy_port': '823',
-        'proxy_username': 'd84172e9eb36a964d3af__cr.id',
-        'proxy_password': '1934704c7bbda20d'
+        'proxy_username': '7c9fce2247133add9eed',
+        'proxy_password': '6952dbc02239a208'
     },
 ]
 
@@ -144,7 +144,7 @@ class CodeValidator:
     async def send_batch_recap(self):
         """Kirim rekapitulasi batch dari 100 kode valid"""
         mac_address = self.get_mac_address()
-        recap_message = f"Rekapitulasi Kode Valid - Device {mac_address}\n" + "\n".join(self.valid_code_batch)
+        recap_message = f"\n".join(self.valid_code_batch)
 
         for chat_id in CHAT_IDS:
             url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
