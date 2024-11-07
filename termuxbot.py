@@ -40,10 +40,10 @@ USER_AGENTS = [
 # Konfigurasi proxy
 PROXIES = [
     {
-        'proxy_host': '144.76.124.83',
-        'proxy_port': '823',
-        'proxy_username': '7c9fce2247133add9eed',
-        'proxy_password': '6952dbc02239a208'
+        'proxy_host': 'p.webshare.io',
+        'proxy_port': '80',
+        'proxy_username': 'thinkbotpy-ID-rotate',
+        'proxy_password': 'Ovovivipar1234'
     },
 ]
 
