@@ -40,10 +40,10 @@ USER_AGENTS = [
 # Konfigurasi proxy
 PROXIES = [
     {
-        'proxy_host': '45.198.6.244',
-        'proxy_port': '7777',
-        'proxy_username': 'lv0u1e11ca',
-        'proxy_password': 'ysdoqvktjm'
+        'proxy_host': 'as.a5hzsdfb.lunaproxy.net',
+        'proxy_port': '12233',
+        'proxy_username': 'termuxbot_Z7mtB',
+        'proxy_password': 'Qwerty9'
     },
 ]
 
