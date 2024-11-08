@@ -16,7 +16,7 @@ initial_setup() {
 
     # Clone repository jika belum ada
     if [ ! -d "termux.py" ]; then
-        git clone $REPO_URL
+        git clone --depth 1 $REPO_URL -b $BRANCH
         cd termux.py
     else
         cd termux.py
@@ -25,6 +25,7 @@ initial_setup() {
     fi
 
     # Install Python dependencies
+    pip install --upgrade pip
     pip install aiohttp aiofiles requests
 
     # Set executable permissions
