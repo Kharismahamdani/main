@@ -37,27 +37,13 @@ USER_AGENTS = [
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
 ]
 
-# Konfigurasi proxy static residential
-STATIC_PROXIES = [
-    "45.198.6.244:7777:lv0u1e11ca:ysdoqvktjm",
-    "445.198.19.92:7777:ol6amlsbuk:mruqlb11tg",
-    "45.198.19.82:7777:v00hs54eoq:vaixxby9uh",
-    "45.198.10.229:7777:qycd1hv50o:qt3kvvszkq",
-    "45.198.10.251:7777:j3xg72jnfe:m1ra5j1335",
-    "445.198.6.237:7777:45.198.6.237:e8v0c87a6j",
-    "45.198.6.240:7777:8gdkmgi3te:ax78y98jhv",
-    "45.198.20.86:7777:o7oklj3qj4:dq6l86onh1",
-    "45.198.5.236:7777:tkh924xydl:ckh7f0cq4w",
-    "45.198.22.100:7777:4bbk2qidrl:mqhogw8s4w"
-]
-
 # Konfigurasi proxy dynamic rotating residential
 DYNAMIC_PROXIES = [
     {
-        'proxy_host': 'as.a5hzsdfb.lunaproxy.net',
-        'proxy_port': '12233',
-        'proxy_username': 'termuxbot_Z7mtB',
-        'proxy_password': 'Qwerty9'
+        'proxy_host': 'gw.dataimpulse.com',
+        'proxy_port': '823',
+        'proxy_username': 'd84172e9eb36a964d3af',
+        'proxy_password': '1934704c7bbda20d'
     },
 ]
 
@@ -102,16 +88,12 @@ class CodeValidator:
             payload = {"uniq_code": code}
 
             for attempt in range(2):  # Kurangi jumlah retry
-                proxy = random.choice(STATIC_PROXIES + DYNAMIC_PROXIES)
-                if isinstance(proxy, dict):
-                    proxy_url = f"http://{proxy['proxy_host']}:{proxy['proxy_port']}"
-                    proxy_auth = aiohttp.BasicAuth(
-                        login=proxy['proxy_username'],
-                        password=proxy['proxy_password']
-                    )
-                else:
-                    proxy_url = f"http://{proxy}"
-                    proxy_auth = None
+                proxy = random.choice(DYNAMIC_PROXIES)
+                proxy_url = f"http://{proxy['proxy_host']}:{proxy['proxy_port']}"
+                proxy_auth = aiohttp.BasicAuth(
+                    login=proxy['proxy_username'],
+                    password=proxy['proxy_password']
+                )
 
                 try:
                     async with session.post(
@@ -156,7 +138,7 @@ class CodeValidator:
         self.valid_code_batch.append(code)
         
         # Jika sudah mencapai 100 kode, kirim rekapitulasi ke Telegram
-        if len(self.valid_code_batch) >= 500:
+        if len(self.valid_code_batch) >= 100:
             await self.send_batch_recap()
 
     async def send_batch_recap(self):
