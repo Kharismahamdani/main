@@ -165,10 +165,10 @@ class CodeValidator:
             url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
             payload = {'chat_id': chat_id, 'text': recap_message}
 
-            async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession() as session:
                 async with session.post(url, data=payload) as response:
                     if response.status != 200:
-                                                logger.error(f"Gagal mengirim pesan ke Telegram: {await response.text()}")
+                        logger.error(f"Gagal mengirim pesan ke Telegram: {await response.text()}")
 
         self.valid_code_batch = []  # Reset batch setelah pengiriman
 
@@ -204,7 +204,12 @@ async def main():
             # Hitung total yang sudah divalidasi dan tampilkan statusnya
             validator.total_processed += len([r for r in results if isinstance(r, tuple)])
             elapsed_time = time.time() - start_time
-            validator.display_status(elapsed_time)
+            print(f"{YELLOW}Device: {validator.device_id}{RESET}")
+            print(f"{BLUE}Total Validasi Kode: {validator.total_processed}{RESET}")
+            print(f"{GREEN}Total Kode Valid: {validator.total_valid}{RESET}")
+            print(f"{YELLOW}Total Kode Invalid: {validator.total_invalid}{RESET}")
+            print(f"{RED}Total Kode Error: {validator.total_error}{RESET}")
+            print(f"{WHITE}Waktu Validasi: {elapsed_time:.2f} detik{RESET}")
 
             await asyncio.sleep(0.1)  # Tunggu sebelum batch berikutnya
 
