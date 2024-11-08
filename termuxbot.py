@@ -49,9 +49,9 @@ STATIC_PROXIES = [
     {'proxy_host': '45.198.22.100', 'proxy_port': '7777', 'proxy_username': '4bbk2qidrl', 'proxy_password': 'mqhogw8s4w'}
 ]
 
-# Rotating proxy (replace with your dynamic proxy details)
+# Rotating proxy
 ROTATING_PROXY = {
-    'proxy_host': 'as.a5hzsdfb.lunaproxy.net',
+    'proxy_host': 'as.a5hzsdfb.lunaproxy',
     'proxy_port': '12233',
     'proxy_username': 'user-termuxbot_Z7mtB',
     'proxy_password': 'Qwerty9'
@@ -71,34 +71,23 @@ class CodeValidator:
         self.device_id = device_id
         self.total_devices = total_devices
         self.sem = asyncio.Semaphore(1000)
-        self.batch_size = 50  # Tetap kecil untuk menghemat data
-        self.retry_delay = 0.05
-        self.valid_codes = set()
-        self.prefixes = ["BY", "MF", "CW", "J8", "9L"]
-        self.suffixes = ["LH", "8D", "8M", "YX", "TK", "4Y", "9Y", "9X"]
+        self.batch_size = 50
+        self.valid_code_batch = []
         self.total_valid = 0
         self.total_invalid = 0
         self.total_error = 0
         self.total_processed = 0
-        self.valid_code_batch = []  # Menyimpan kode valid untuk rekapitulasi per batch
-
-    def generate_code(self):
-        """Generate kode dengan format [prefix][4 random alphanumeric][suffix]"""
-        prefix = random.choice(self.prefixes)
-        middle_part = ''.join(random.choices("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", k=4))
-        suffix = random.choice(self.suffixes)
-        return f"{prefix}{middle_part}{suffix}"
 
     async def validate_code(self, session, code):
         async with self.sem:
             headers = {
                 'User-Agent': random.choice(USER_AGENTS),
                 'Content-Type': 'application/json',
-                'Accept-Encoding': 'gzip, deflate'  # Meminta response terkompresi
+                'Accept-Encoding': 'gzip, deflate'
             }
             payload = {"uniq_code": code}
 
-            for attempt in range(2):  # Static proxy
+            for attempt in range(2):  # Static proxy first
                 proxy_config = get_static_proxy()
                 proxy_url = f"http://{proxy_config['proxy_host']}:{proxy_config['proxy_port']}"
                 proxy_auth = aiohttp.BasicAuth(
@@ -122,7 +111,7 @@ class CodeValidator:
                 except Exception as e:
                     logger.warning(f"Static proxy failed {e}")
 
-            # Fallback ke rotating proxy
+            # Fallback to rotating proxy
             proxy_url = f"http://{ROTATING_PROXY['proxy_host']}:{ROTATING_PROXY['proxy_port']}"
             proxy_auth = aiohttp.BasicAuth(
                 login=ROTATING_PROXY['proxy_username'],
@@ -145,30 +134,6 @@ class CodeValidator:
                 logger.error(f"Rotating proxy failed {e}")
 
     async def record_valid_code(self, code):
-        """Log kode valid"""
-        async with aiofiles.open('valid_codes.txt', 'a') as f:
-            await f.write(f"{code}\n")
-
-    async def send_batch_recap(self):
-        """Kirim rekap batch 500 kode valid ke Telegram"""
-        if len(self.valid_code_batch) < 500:
-            return  # Kirim jika mencapai 500
-        recap_message = "\n".join(self.valid_code_batch)
-
-        for chat_id in CHAT_IDS:
-                        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-            payload = {'chat_id': chat_id, 'text': recap_message}
-
-            # Kirim pesan ke Telegram tanpa menggunakan proxy
-            async with aiohttp.ClientSession() as session:
-                async with session.post(url, data=payload) as response:
-                    if response.status != 200:
-                        logger.error(f"Gagal mengirim pesan ke Telegram: {await response.text()}")
-
-        # Reset batch setelah pengiriman
-        self.valid_code_batch = []
-
-    async def record_valid_code(self, code):
         """Simpan kode valid ke file dan tambahkan ke batch"""
         async with aiofiles.open('valid_codes.txt', 'a') as f:
             await f.write(f"{code}\n")
@@ -179,16 +144,23 @@ class CodeValidator:
         if len(self.valid_code_batch) >= 500:
             await self.send_batch_recap()
 
-    def display_status(self, elapsed_time):
-        """Tampilkan status perangkat dan validasi"""
-        print(
-            f"{YELLOW}Device: {self.device_id}{RESET}\n"
-            f"{BLUE}Total Validasi Kode: {self.total_processed}{RESET}\n"
-            f"{GREEN}Total Kode Valid: {self.total_valid}{RESET}\n"
-            f"{YELLOW}Total Kode Invalid: {self.total_invalid}{RESET}\n"
-            f"{RED}Total Kode Error: {self.total_error}{RESET}\n"
-            f"{WHITE}Waktu Validasi: {elapsed_time:.2f} detik{RESET}\n"
-        )
+    async def send_batch_recap(self):
+        """Kirim rekap batch 500 kode valid ke Telegram"""
+        if len(self.valid_code_batch) < 500:
+            return
+
+        recap_message = "\n".join(self.valid_code_batch)
+
+        for chat_id in CHAT_IDS:
+            url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+            payload = {'chat_id': chat_id, 'text': recap_message}
+
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, data=payload) as response:
+                    if response.status != 200:
+                        logger.error(f"Gagal mengirim pesan ke Telegram: {await response.text()}")
+
+        self.valid_code_batch = []
 
 async def check_for_updates():
     """Cek pembaruan di GitHub setiap 5 menit"""
