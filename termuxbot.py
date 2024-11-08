@@ -51,7 +51,7 @@ STATIC_PROXIES = [
 
 # Rotating proxy
 ROTATING_PROXY = {
-    'proxy_host': 'as.a5hzsdfb.lunaproxy',
+    'proxy_host': 'as.a5hzsdfb.lunaproxy.net',
     'proxy_port': '12233',
     'proxy_username': 'user-termuxbot_Z7mtB',
     'proxy_password': 'Qwerty9'
@@ -77,6 +77,16 @@ class CodeValidator:
         self.total_invalid = 0
         self.total_error = 0
         self.total_processed = 0
+
+        self.prefixes = ["BY", "MF", "CW", "J8", "9L"]
+        self.suffixes = ["LH", "8D", "8M", "YX", "TK", "4Y", "9Y", "9X"]
+
+    def generate_code(self):
+        """Generate kode dengan format [prefix][4 random alphanumeric][suffix]"""
+        prefix = random.choice(self.prefixes)
+        middle_part = ''.join(random.choices("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", k=4))
+        suffix = random.choice(self.suffixes)
+        return f"{prefix}{middle_part}{suffix}"
 
     async def validate_code(self, session, code):
         async with self.sem:
@@ -158,9 +168,9 @@ class CodeValidator:
             async with aiohttp.ClientSession() as session:
                 async with session.post(url, data=payload) as response:
                     if response.status != 200:
-                        logger.error(f"Gagal mengirim pesan ke Telegram: {await response.text()}")
+                                                logger.error(f"Gagal mengirim pesan ke Telegram: {await response.text()}")
 
-        self.valid_code_batch = []
+        self.valid_code_batch = []  # Reset batch setelah pengiriman
 
 async def check_for_updates():
     """Cek pembaruan di GitHub setiap 5 menit"""
