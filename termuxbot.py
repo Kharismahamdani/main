@@ -52,8 +52,8 @@ class CodeValidator:
         self.device_id = device_id
         self.total_devices = total_devices
         self.sem = asyncio.Semaphore(100)  # Kurangi semaphore untuk mengurangi beban
-        self.batch_size = 100  # Kurangi ukuran batch
-        self.retry_delay = 0.05  # Percepat retry delay
+        self.batch_size = 200  # Kurangi ukuran batch
+        self.retry_delay = 0.5  # Percepat retry delay
         self.valid_codes = set()
         self.prefixes = ["BY", "MF", "CW", "J8", "9L"]
         self.suffixes = ["LH", "8D", "8M", "YX", "TK", "4Y", "9Y", "9X"]
@@ -102,7 +102,7 @@ class CodeValidator:
                         headers=headers,
                         proxy=proxy_url,
                         proxy_auth=proxy_auth,
-                        timeout=8  # Percepat timeout
+                        timeout=10  # Percepat timeout
                     ) as response:
                         if response.status == 200:
                             resp_json = await response.json()
