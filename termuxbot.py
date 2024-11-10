@@ -37,8 +37,8 @@ USER_AGENTS = [
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
 ]
 
-# Konfigurasi proxy dynamic rotating residential
-DYNAMIC_PROXIES = [
+# Konfigurasi proxy
+PROXIES = [
     {
         'proxy_host': 'gw.dataimpulse.com',
         'proxy_port': '823',
@@ -51,9 +51,9 @@ class CodeValidator:
     def __init__(self, device_id, total_devices):
         self.device_id = device_id
         self.total_devices = total_devices
-        self.sem = asyncio.Semaphore(100)  # Kurangi semaphore untuk mengurangi beban
-        self.batch_size = 200  # Kurangi ukuran batch
-        self.retry_delay = 0.5  # Percepat retry delay
+        self.sem = asyncio.Semaphore(1000)
+        self.batch_size = 100
+        self.retry_delay = 0.1
         self.valid_codes = set()
         self.prefixes = ["BY", "MF", "CW", "J8", "9L"]
         self.suffixes = ["LH", "8D", "8M", "YX", "TK", "4Y", "9Y", "9X"]
@@ -87,12 +87,12 @@ class CodeValidator:
             }
             payload = {"uniq_code": code}
 
-            for attempt in range(2):  # Kurangi jumlah retry
-                proxy = random.choice(DYNAMIC_PROXIES)
-                proxy_url = f"http://{proxy['proxy_host']}:{proxy['proxy_port']}"
+            for attempt in range(2):
+                proxy_config = random.choice(PROXIES)
+                proxy_url = f"http://{proxy_config['proxy_host']}:{proxy_config['proxy_port']}"
                 proxy_auth = aiohttp.BasicAuth(
-                    login=proxy['proxy_username'],
-                    password=proxy['proxy_password']
+                    login=proxy_config['proxy_username'],
+                    password=proxy_config['proxy_password']
                 )
 
                 try:
@@ -102,7 +102,7 @@ class CodeValidator:
                         headers=headers,
                         proxy=proxy_url,
                         proxy_auth=proxy_auth,
-                        timeout=10  # Percepat timeout
+                        timeout=8
                     ) as response:
                         if response.status == 200:
                             resp_json = await response.json()
@@ -138,7 +138,7 @@ class CodeValidator:
         self.valid_code_batch.append(code)
         
         # Jika sudah mencapai 100 kode, kirim rekapitulasi ke Telegram
-        if len(self.valid_code_batch) >= 100:
+        if len(self.valid_code_batch) >= 10:
             await self.send_batch_recap()
 
     async def send_batch_recap(self):
