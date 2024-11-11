@@ -40,10 +40,10 @@ USER_AGENTS = [
 # Konfigurasi proxy
 PROXIES = [
     {
-        'proxy_host': 'gw.dataimpulse.com',
+        'proxy_host': '144.76.124.83',
         'proxy_port': '823',
-        'proxy_username': 'd84172e9eb36a964d3af',
-        'proxy_password': '1934704c7bbda20d'
+        'proxy_username': '7c9fce2247133add9eed',
+        'proxy_password': '6952dbc02239a208'
     },
 ]
 
